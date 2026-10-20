@@ -53,8 +53,9 @@ def get_performance_map(
     elif heating_type == "ELECTRIC":
         heating_type_enum = "ELECTRIC"
     else:
-        raise TypeError(f"heating_type must be one of 'GAS', 'ASHP', or 'ELECTRIC'; got {heating_type}")
-    
+        raise TypeError(
+            f"heating_type must be one of 'GAS', 'ASHP', or 'ELECTRIC'; got {heating_type}"
+        )
 
     unit = RESNETDXModel(
         staging_type=stage_type_var,
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     hspf2 = argv[8]
     motor_type = argv[9]
     duct_type = argv[10]
-    heating_type = argv[11]    
+    heating_type = argv[11]
 
     print(
         get_performance_map(
