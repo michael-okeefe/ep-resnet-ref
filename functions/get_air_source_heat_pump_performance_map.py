@@ -46,12 +46,16 @@ def get_performance_map(
         is_ducted = False
 
     heating_type_enum: Literal["GAS", "ASHP", "ELECTRIC"]
+    get_heating_performance_map: bool
     if heating_type == "ASHP":
         heating_type_enum = "ASHP"
+        get_heating_performance_map = True
     elif heating_type == "GAS":  # heating_type == "GAS" or heating_type == "ELECTRIC"
         heating_type_enum = "GAS"
+        get_heating_performance_map = False
     elif heating_type == "ELECTRIC":
         heating_type_enum = "ELECTRIC"
+        get_heating_performance_map = False
     else:
         raise TypeError(
             f"heating_type must be one of 'GAS', 'ASHP', or 'ELECTRIC'; got {heating_type}"
@@ -79,7 +83,7 @@ def get_performance_map(
         normalize=False,
         get_fan=True,
         get_cooling_performance_map=True,
-        get_heating_performance_map=True,
+        get_heating_performance_map=get_heating_performance_map,
     )
 
 
