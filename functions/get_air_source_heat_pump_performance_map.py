@@ -1,13 +1,12 @@
 from sys import argv
-
-from koozie import fr_u
+from typing import Literal
 
 from resdx import (
     EnergyPlusSystemType,
     FanMotorType,
     RESNETDXModel,
     StagingType,
-    write_idf,
+    get_idf_string,
 )
 
 
@@ -23,62 +22,64 @@ def get_performance_map(
     motor_type: str,
     duct_type: str,
     heating_type: str,
-) -> str:  # type: ignore
+) -> str:
     """
     Get IDF objects
     """
-    stage_type = StagingType[stage_type]
+    stage_type_var: StagingType = StagingType[stage_type]
 
-    cooling_capacity_95 = fr_u(float(cooling_capacity_95_W), "W")
-    heating_capacity_47 = fr_u(float(heating_capacity_47_W), "W")
-    heating_capacity_17 = fr_u(float(heating_capacity_17_W), "W")
+    cooling_capacity_95 = float(cooling_capacity_95_W)
+    heating_capacity_47 = float(heating_capacity_47_W)
+    heating_capacity_17 = float(heating_capacity_17_W)
 
-    minimum_rated_temperature = fr_u(float(minimum_rated_temperature_degC), "degC")
+    minimum_rated_temperature = float(minimum_rated_temperature_degC)
 
-    seer2: float = float(seer2)  # type: ignore
-    eer2: float = float(eer2)  # type: ignore
-    hspf2: float = float(hspf2)  # type: ignore
+    seer2_value: float = float(seer2)
+    eer2_value: float = float(eer2)
+    hspf2_value: float = float(hspf2)
 
-    motor_type = FanMotorType[motor_type]
+    motor_type_value: FanMotorType = FanMotorType[motor_type]
 
     if duct_type == "DUCTED":
         is_ducted = True
     else:  # duct_type == "DUCTLESS"
         is_ducted = False
 
+    heating_type_enum: Literal["GAS", "ASHP", "ELECTRIC"]
     if heating_type == "ASHP":
-        get_heating_performance_map = True
-    else:  # heating_type == "GAS" or heating_type == "ELECTRIC"
-        get_heating_performance_map = False
+        heating_type_enum = "ASHP"
+    elif heating_type == "GAS":  # heating_type == "GAS" or heating_type == "ELECTRIC"
+        heating_type_enum = "GAS"
+    elif heating_type == "ELECTRIC":
+        heating_type_enum = "ELECTRIC"
+    else:
+        raise TypeError(f"heating_type must be one of 'GAS', 'ASHP', or 'ELECTRIC'; got {heating_type}")
+    
 
     unit = RESNETDXModel(
-        staging_type=stage_type,
+        staging_type=stage_type_var,
         rated_net_total_cooling_capacity=cooling_capacity_95,
         rated_net_heating_capacity=heating_capacity_47,
         rated_net_heating_capacity_17=heating_capacity_17,
         heating_off_temperature=minimum_rated_temperature,
-        input_seer=seer2,
-        input_eer=eer2,
-        input_hspf=hspf2,
-        motor_type=motor_type,
+        input_seer=seer2_value,
+        input_eer=eer2_value,
+        input_hspf=hspf2_value,
+        motor_type=motor_type_value,
         is_ducted=is_ducted,
     )
 
-    objects = write_idf(
+    return get_idf_string(
         unit=unit,
-        heating_type=heating_type,
+        heating_type=heating_type_enum,
         system_name="HVAC",
         system_type=EnergyPlusSystemType.UNITARY_SYSTEM,
         autosize=False,
         normalize=False,
         get_fan=True,
-        get_independent_variable_lists=True,
         get_cooling_performance_map=True,
-        get_heating_performance_map=get_heating_performance_map,
-        return_idf_objects=True,
+        get_heating_performance_map=True,
     )
-
-    return objects
 
 
 if __name__ == "__main__":
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     hspf2 = argv[8]
     motor_type = argv[9]
     duct_type = argv[10]
-    heating_type = argv[11]
+    heating_type = argv[11]    
 
     print(
         get_performance_map(
